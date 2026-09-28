@@ -1,3 +1,5 @@
+import i18n from '@/lib/i18n';
+import {localizedAnatomyName} from '@/lib/anatomy-translations';
 export type SystemId = 'skeletal'|'muscular'|'arterial'|'venous'|'nervous'|'digestive'|'respiratory'|'urinary'|'reproductive'|'lymphatic'|'endocrine'|'integumentary'|'connective'|'sensory'|'cardiac';
 export const SYSTEMS: {id:SystemId;name:string;color:string;description:string}[] = [
  {id:'skeletal',name:'Skeleton',color:'#e2d9ba',description:'Bones form the supporting framework of the body, protect organs, and provide attachment points for muscles. Their internal tissue also stores minerals and produces blood cells.'},
@@ -33,4 +35,32 @@ export const EXPLANATIONS:Record<string,string> = {
  'trachea':'The main airway connecting the larynx to the bronchi. Its cartilage supports keep the airway open during breathing.',
  'diaphragm':'A broad muscle separating the chest and abdomen. When it contracts, it increases chest volume and helps draw air into the lungs.',
 };
-export function explanation(name:string,system:SystemId){return EXPLANATIONS[name.toLowerCase()] ?? SYSTEMS.find(s=>s.id===system)?.description ?? '';}
+
+export function systemName(id:SystemId):string{
+ const sys=SYSTEMS.find(s=>s.id===id);
+ return i18n.t(`systems.${id}.name`,{defaultValue:sys?.name??id});
+}
+
+export function systemDescription(id:SystemId):string{
+ const sys=SYSTEMS.find(s=>s.id===id);
+ const translated=i18n.t(`systems.${id}.description`);
+ if(translated&&!translated.startsWith(`systems.${id}.description`))return translated;
+ return sys?.description??'';
+}
+
+export function explanation(name:string,systemId:SystemId){
+ const key=`explanations.${name.toLowerCase()}`;
+ const specific=i18n.t(key);
+ if(specific&&!specific.startsWith(key))return specific;
+ return systemDescription(systemId);
+}
+
+/**
+ * Returns the localized version of an anatomy concept/part name.
+ * Falls back to the original English name if no translation is available.
+ * The system scope (skeletal/muscular/etc.) is used to disambiguate
+ * terms that have different meanings in different systems.
+ */
+export function localizedName(name:string, system?:string):string{
+ return localizedAnatomyName(name,(i18n.language as 'en'|'zh-CN')||'en', system as never);
+}
